@@ -21,10 +21,13 @@ import static org.mule.runtime.api.util.Preconditions.checkArgument;
 
 import org.mule.extension.email.api.attributes.IMAPEmailAttributes;
 import org.mule.extension.email.api.exception.EmailAccessingFolderErrorTypeProvider;
+import org.mule.extension.email.api.exception.EmailMovingErrorTypeProvider;
 import org.mule.extension.email.api.exception.EmailMarkingErrorTypeProvider;
 import org.mule.extension.email.api.predicate.IMAPEmailPredicateBuilder;
+import org.mule.extension.email.internal.commands.EmailMoveException;
 import org.mule.extension.email.internal.commands.EmailSetFlagException;
 import org.mule.extension.email.internal.commands.ExpungeCommand;
+import org.mule.extension.email.internal.commands.MoveMessageCommand;
 import org.mule.extension.email.internal.commands.PagingProviderEmailDelegate;
 import org.mule.extension.email.internal.commands.SetFlagCommand;
 import org.mule.extension.email.internal.errors.EmailListingErrorTypeProvider;
@@ -46,6 +49,7 @@ import org.mule.runtime.extension.api.exception.ModuleException;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.streaming.PagingProvider;
 import org.mule.runtime.extension.api.runtime.streaming.StreamingHelper;
+import org.slf4j.LoggerFactory;
 
 /**
  * Basic set of operations which perform on top the IMAP email protocol.
@@ -56,6 +60,7 @@ public class IMAPOperations {
 
   private final ExpungeCommand expungeCommand = new ExpungeCommand();
   private final SetFlagCommand setFlagCommand = new SetFlagCommand();
+  private final MoveMessageCommand moveCommand = new MoveMessageCommand();
 
   /**
    * List all the emails (with pagination) in the configured imap mailBoxFolder that match with the specified {@code imapMatcher}
@@ -172,6 +177,33 @@ public class IMAPOperations {
       throw new EmailSetFlagException(format("Error while eliminating email uid:[%s] from the [%s] folder", emailId,
                                              mailboxFolder),
                                       e);
+    }
+  }
+
+  /**
+   * Moves an email with id {@code emailId} from {@code sourceFolder} to {@code destinationFolder}.
+   *
+   * @param connection         The corresponding {@link MailboxConnection} instance.
+   * @param sourceFolder       Mailbox folder where the email is going to be moved from.
+   * @param destinationFolder  Mailbox folder where the email is going to be moved to.
+   * @param emailId            Email ID Number of the email to move.
+   */
+  @Summary("Moves an email to the given Mailbox Folder")
+  @Throws(EmailMovingErrorTypeProvider.class)
+  public void move(@Connection MailboxConnection connection,
+                   @Optional(defaultValue = INBOX_FOLDER) @OfValues(MailboxFolderValueProvider.class) String sourceFolder,
+                   String destinationFolder,
+                   @Summary("Email ID Number of the email to move") @DisplayName("Email ID") long emailId) {
+    try {
+      moveCommand.move(connection, sourceFolder, destinationFolder, emailId);
+    } catch (ModuleException e) {
+      throw e;
+    } catch (Exception e) {
+      final String message = format("Error while moving email uid:[%s] from the [%s] folder to [%s]", emailId,
+                                   sourceFolder,
+                                   destinationFolder);
+      LoggerFactory.getLogger(IMAPOperations.class).warn(message, e);
+      throw new EmailMoveException(message, e);
     }
   }
 }

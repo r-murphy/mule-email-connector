@@ -105,6 +105,9 @@ public class MailboxConnection extends AbstractEmailConnection {
     this(protocol, username, password, host, port, connectionTimeout, readTimeout, writeTimeout, properties, null);
   }
 
+  public Store getStore() {
+    return store;
+  }
 
   /**
    * Opens and return the email {@link Folder} of name {@code mailBoxFolder}. The folder can contain Messages, other Folders or

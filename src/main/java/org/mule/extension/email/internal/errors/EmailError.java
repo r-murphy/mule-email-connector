@@ -64,6 +64,11 @@ public enum EmailError implements ErrorTypeDefinition<EmailError> {
    */
   READ_EMAIL,
 
+  /**
+   * Error moving email
+   */
+  MOVE_EMAIL,
+
   // Connection related errors
 
   CONNECTIVITY(MuleErrors.CONNECTIVITY),
