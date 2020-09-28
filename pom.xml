@@ -254,4 +254,12 @@
         </pluginRepository>
     </pluginRepositories>
 
+    <distributionManagement>
+        <repository>
+            <id>dev-azure-com-softchoiceintegration-softchoiceintegration</id>
+            <url>https://pkgs.dev.azure.com/SoftchoiceIntegration/_packaging/SoftchoiceIntegration/maven/v1</url>
+            <layout>default</layout>
+        </repository>
+    </distributionManagement>
+
 </project>
